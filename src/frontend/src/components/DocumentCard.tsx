@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Download, Eye, Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Category, Document } from "../backend";
@@ -96,22 +96,6 @@ export default function DocumentCard({
     }
   };
 
-  const handleDownload = async () => {
-    if (!doc.blob) {
-      toast.error("File not available");
-      return;
-    }
-    try {
-      const url = doc.blob.getDirectURL();
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = doc.fileName;
-      a.click();
-    } catch {
-      toast.error("Download failed");
-    }
-  };
-
   return (
     <div
       className="bg-card rounded-lg border border-border shadow-card hover:shadow-md transition-shadow flex flex-col"
@@ -160,16 +144,6 @@ export default function DocumentCard({
           data-ocid={`files.view.button.${index}`}
         >
           <Eye className="h-3.5 w-3.5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0"
-          onClick={handleDownload}
-          title="Download"
-          data-ocid={`files.download.button.${index}`}
-        >
-          <Download className="h-3.5 w-3.5" />
         </Button>
         <Button
           variant="ghost"

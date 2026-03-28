@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
-  Download,
   Eye,
   File,
   FileImage,
@@ -106,22 +105,6 @@ export default function DocumentRow({
     }
   };
 
-  const handleDownload = async () => {
-    if (!doc.blob) {
-      toast.error("File not available");
-      return;
-    }
-    try {
-      const url = doc.blob.getDirectURL();
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = doc.fileName;
-      a.click();
-    } catch {
-      toast.error("Download failed");
-    }
-  };
-
   return (
     <div
       className={cn(
@@ -194,16 +177,6 @@ export default function DocumentRow({
           data-ocid={`files.view.button.${index}`}
         >
           <Eye className="h-3.5 w-3.5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
-          onClick={handleDownload}
-          title="Download"
-          data-ocid={`files.download.button.${index}`}
-        >
-          <Download className="h-3.5 w-3.5" />
         </Button>
         <Button
           variant="ghost"

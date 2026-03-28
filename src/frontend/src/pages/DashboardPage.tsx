@@ -17,6 +17,7 @@ import {
   HardDrive,
   KeyRound,
   Loader2,
+  Menu,
   Search,
   Upload,
   X,
@@ -105,9 +106,9 @@ function ChangePasswordPanel() {
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-foreground">
+        <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
           Account Settings
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -115,7 +116,7 @@ function ChangePasswordPanel() {
         </p>
       </div>
       <div
-        className="rounded-xl border border-white/10 p-6"
+        className="rounded-xl border border-white/10 p-4 sm:p-6"
         style={{ background: "oklch(0.22 0.07 250)" }}
         data-ocid="settings.panel"
       >
@@ -189,7 +190,7 @@ function ChangePasswordPanel() {
             <Button
               type="submit"
               disabled={loading}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
               style={{ background: "oklch(0.50 0.18 250)" }}
               data-ocid="settings.change_password.submit_button"
             >
@@ -216,6 +217,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [viewingDoc, setViewingDoc] = useState<Document | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const defaultCategoriesSeeded = useRef(false);
 
   // Upload state
@@ -240,7 +242,6 @@ export default function DashboardPage() {
     enabled: !!actor,
   });
 
-  // Seed default categories on first login if none exist
   useEffect(() => {
     if (!actor || !categoriesFetched || defaultCategoriesSeeded.current) return;
     if (categories.length === 0) {
@@ -400,19 +401,29 @@ export default function DashboardPage() {
     }
   };
 
+  const sidebarProps = {
+    activeView,
+    onViewChange: setActiveView,
+    activeCategoryId,
+    onCategorySelect: setActiveCategoryId,
+    categories,
+    onAddCategory: () => setShowAddCategory(true),
+    onDeleteCategory: handleDeleteCategory,
+    isOpen: sidebarOpen,
+    onClose: () => setSidebarOpen(false),
+  };
+
   if (activeView === "settings") {
     return (
       <div className="flex h-screen">
-        <Sidebar
-          activeView={activeView}
-          onViewChange={setActiveView}
-          activeCategoryId={activeCategoryId}
-          onCategorySelect={setActiveCategoryId}
-          categories={categories}
-          onAddCategory={() => setShowAddCategory(true)}
-          onDeleteCategory={handleDeleteCategory}
-        />
-        <main className="ml-[240px] flex-1 overflow-y-auto bg-background">
+        <Sidebar {...sidebarProps} />
+        <main className="lg:ml-[240px] flex-1 overflow-y-auto bg-background">
+          <MobileHeader
+            username={username}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onMenuOpen={() => setSidebarOpen(true)}
+          />
           <ChangePasswordPanel />
         </main>
         <AddCategoryModal
@@ -427,16 +438,14 @@ export default function DashboardPage() {
   if (activeView === "admin") {
     return (
       <div className="flex h-screen">
-        <Sidebar
-          activeView={activeView}
-          onViewChange={setActiveView}
-          activeCategoryId={activeCategoryId}
-          onCategorySelect={setActiveCategoryId}
-          categories={categories}
-          onAddCategory={() => setShowAddCategory(true)}
-          onDeleteCategory={handleDeleteCategory}
-        />
-        <main className="ml-[240px] flex-1 overflow-y-auto bg-background">
+        <Sidebar {...sidebarProps} />
+        <main className="lg:ml-[240px] flex-1 overflow-y-auto bg-background">
+          <MobileHeader
+            username={username}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onMenuOpen={() => setSidebarOpen(true)}
+          />
           <AdminPage />
         </main>
         <AddCategoryModal
@@ -450,49 +459,52 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-screen">
-      <Sidebar
-        activeView={activeView}
-        onViewChange={setActiveView}
-        activeCategoryId={activeCategoryId}
-        onCategorySelect={setActiveCategoryId}
-        categories={categories}
-        onAddCategory={() => setShowAddCategory(true)}
-        onDeleteCategory={handleDeleteCategory}
-      />
+      <Sidebar {...sidebarProps} />
 
-      <main className="ml-[240px] flex-1 overflow-y-auto bg-background flex flex-col">
+      <main className="lg:ml-[240px] flex-1 overflow-y-auto bg-background flex flex-col">
         {/* Top navbar */}
         <header
-          className="sticky top-0 z-20 flex items-center gap-4 px-6 py-0 h-14 border-b border-white/10"
+          className="sticky top-0 z-20 flex items-center gap-3 px-3 sm:px-6 py-0 h-14 border-b border-white/10"
           style={{ background: "oklch(0.22 0.07 250)" }}
         >
+          {/* Hamburger for mobile */}
+          <button
+            type="button"
+            className="lg:hidden text-white/60 hover:text-white transition-colors p-1"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+
           <div className="flex-1" />
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
             <Input
-              placeholder="Search documents..."
-              className="pl-9 w-52 text-sm h-8 bg-white/10 border-white/15 text-white placeholder:text-white/35 focus:bg-white/15 focus:border-white/30"
+              placeholder="Search..."
+              className="pl-9 w-36 sm:w-52 text-sm h-8 bg-white/10 border-white/15 text-white placeholder:text-white/35 focus:bg-white/15 focus:border-white/30"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               data-ocid="header.search.input"
             />
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <div
-              className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+              className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
               style={{ background: "oklch(0.55 0.18 250)" }}
             >
               {username?.charAt(0).toUpperCase()}
             </div>
-            <span className="text-white/85 text-sm font-medium">
+            <span className="hidden sm:block text-white/85 text-sm font-medium">
               {username}
             </span>
           </div>
         </header>
 
-        <div className="flex-1 p-6 space-y-6">
+        <div className="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6">
           {/* Stats row */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {[
               {
                 label: "Total Documents",
@@ -519,7 +531,7 @@ export default function DashboardPage() {
             ].map(({ label, value, icon: Icon, color, bg }) => (
               <div
                 key={label}
-                className="bg-card rounded-md border border-border px-5 py-4 flex items-center gap-4 shadow-sm"
+                className="bg-card rounded-md border border-border px-4 sm:px-5 py-3 sm:py-4 flex items-center gap-4 shadow-sm"
               >
                 <div
                   className="h-10 w-10 rounded-md flex items-center justify-center flex-shrink-0"
@@ -565,7 +577,7 @@ export default function DashboardPage() {
                 {!uploadFile ? (
                   <button
                     type="button"
-                    className="flex flex-col items-center justify-center py-8 gap-2 w-full border-none bg-transparent cursor-pointer"
+                    className="flex flex-col items-center justify-center py-6 sm:py-8 gap-2 w-full border-none bg-transparent cursor-pointer"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <div
@@ -577,11 +589,13 @@ export default function DashboardPage() {
                         style={{ color: "oklch(0.55 0.18 250)" }}
                       />
                     </div>
-                    <div className="text-center">
+                    <div className="text-center px-4">
                       <p className="font-semibold text-sm text-foreground">
-                        Drag &amp; drop files here or{" "}
+                        <span className="hidden sm:inline">
+                          Drag &amp; drop files here or{" "}
+                        </span>
                         <span style={{ color: "oklch(0.55 0.18 250)" }}>
-                          click to browse
+                          Tap to browse files
                         </span>
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
@@ -590,8 +604,8 @@ export default function DashboardPage() {
                     </div>
                   </button>
                 ) : (
-                  <div className="p-5">
-                    <div className="flex items-start gap-4 mb-4">
+                  <div className="p-4 sm:p-5">
+                    <div className="flex items-start gap-3 sm:gap-4 mb-4">
                       <div
                         className="h-10 w-10 rounded-md flex items-center justify-center flex-shrink-0"
                         style={{ background: "oklch(0.93 0.04 250)" }}
@@ -621,7 +635,7 @@ export default function DashboardPage() {
                         <X className="h-4 w-4" />
                       </button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label
                           htmlFor="upload-title"
@@ -697,7 +711,7 @@ export default function DashboardPage() {
                           handleUpload();
                         }}
                         disabled={uploading || !uploadCategoryId}
-                        className="h-9 text-sm font-semibold"
+                        className="h-9 text-sm font-semibold w-full sm:w-auto"
                         style={{
                           background: "oklch(0.28 0.09 250)",
                           color: "white",
@@ -718,9 +732,9 @@ export default function DashboardPage() {
 
           {/* Documents section */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-foreground">
+            <div className="flex items-center justify-between mb-3 gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-base font-bold text-foreground truncate">
                   {activeView === "recent"
                     ? "Recent Documents"
                     : activeCategoryId
@@ -730,58 +744,13 @@ export default function DashboardPage() {
                 </h2>
                 <Badge
                   variant="secondary"
-                  className="text-xs font-normal bg-blue-50 text-blue-700 border border-blue-100"
+                  className="text-xs font-normal bg-blue-50 text-blue-700 border border-blue-100 flex-shrink-0"
                 >
                   {displayDocs.length}
                 </Badge>
               </div>
 
-              <div className="flex items-center gap-2">
-                {/* Category filter pills */}
-                {activeView === "files" && categories.length > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setActiveCategoryId(null)}
-                      className={cn(
-                        "text-xs px-3 py-1 rounded-full border transition-all font-medium",
-                        activeCategoryId === null
-                          ? "text-white border-transparent"
-                          : "border-slate-200 text-muted-foreground hover:border-primary/50",
-                      )}
-                      style={
-                        activeCategoryId === null
-                          ? { background: "oklch(0.28 0.09 250)" }
-                          : {}
-                      }
-                      data-ocid="files.filter.tab"
-                    >
-                      All
-                    </button>
-                    {categories.map((cat) => (
-                      <button
-                        type="button"
-                        key={cat.id.toString()}
-                        onClick={() => setActiveCategoryId(cat.id)}
-                        className={cn(
-                          "text-xs px-3 py-1 rounded-full border transition-all font-medium",
-                          activeCategoryId === cat.id
-                            ? "text-white border-transparent"
-                            : "border-slate-200 text-muted-foreground hover:border-primary/50",
-                        )}
-                        style={
-                          activeCategoryId === cat.id
-                            ? { background: "oklch(0.28 0.09 250)" }
-                            : {}
-                        }
-                        data-ocid="files.category.tab"
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <Button
                   size="sm"
                   className="h-8 gap-1.5 text-xs font-semibold"
@@ -793,15 +762,60 @@ export default function DashboardPage() {
                   data-ocid="header.upload.button"
                 >
                   <Upload className="h-3.5 w-3.5" />
-                  Upload
+                  <span className="hidden sm:inline">Upload</span>
                 </Button>
               </div>
             </div>
 
+            {/* Category filter pills - horizontally scrollable on mobile */}
+            {activeView === "files" && categories.length > 0 && (
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-3 scrollbar-hide">
+                <button
+                  type="button"
+                  onClick={() => setActiveCategoryId(null)}
+                  className={cn(
+                    "text-xs px-3 py-1 rounded-full border transition-all font-medium whitespace-nowrap flex-shrink-0",
+                    activeCategoryId === null
+                      ? "text-white border-transparent"
+                      : "border-slate-200 text-muted-foreground hover:border-primary/50",
+                  )}
+                  style={
+                    activeCategoryId === null
+                      ? { background: "oklch(0.28 0.09 250)" }
+                      : {}
+                  }
+                  data-ocid="files.filter.tab"
+                >
+                  All
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    type="button"
+                    key={cat.id.toString()}
+                    onClick={() => setActiveCategoryId(cat.id)}
+                    className={cn(
+                      "text-xs px-3 py-1 rounded-full border transition-all font-medium whitespace-nowrap flex-shrink-0",
+                      activeCategoryId === cat.id
+                        ? "text-white border-transparent"
+                        : "border-slate-200 text-muted-foreground hover:border-primary/50",
+                    )}
+                    style={
+                      activeCategoryId === cat.id
+                        ? { background: "oklch(0.28 0.09 250)" }
+                        : {}
+                    }
+                    data-ocid="files.category.tab"
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Document list */}
             <div className="bg-card rounded-md border border-border shadow-sm overflow-hidden">
-              {/* List header */}
-              <div className="flex items-center gap-4 px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+              {/* List header - hidden on mobile */}
+              <div className="hidden sm:flex items-center gap-4 px-4 py-2.5 bg-slate-50 border-b border-slate-100">
                 <div className="w-9 flex-shrink-0" />
                 <div className="flex-1 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Document
@@ -830,7 +844,7 @@ export default function DashboardPage() {
                 </div>
               ) : displayDocs.length === 0 ? (
                 <div
-                  className="flex flex-col items-center justify-center py-16 text-center"
+                  className="flex flex-col items-center justify-center py-12 sm:py-16 text-center"
                   data-ocid="files.empty_state"
                 >
                   <div
@@ -847,7 +861,7 @@ export default function DashboardPage() {
                       ? "No documents match your search"
                       : "No documents yet"}
                   </h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground px-4">
                     {searchQuery
                       ? "Try a different search term"
                       : "Upload your first document using the upload area above"}
@@ -885,18 +899,13 @@ export default function DashboardPage() {
 
         {/* Footer */}
         <footer
-          className="px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs border-t"
+          className="px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs border-t"
           style={{
             background: "oklch(0.22 0.07 250)",
             borderColor: "oklch(0.28 0.07 250)",
           }}
         >
           <div className="flex items-center gap-2">
-            <img
-              src="/assets/generated/infinexy-logo-transparent.dim_200x200.png"
-              alt="Infinexy"
-              className="h-4 w-4 object-contain"
-            />
             <span className="text-white/60 font-medium">Infinexy Solution</span>
             <span className="text-white/25">—</span>
             <span className="text-white/35">Secure Document Storage</span>
@@ -926,5 +935,51 @@ export default function DashboardPage() {
         onClose={() => setViewingDoc(null)}
       />
     </div>
+  );
+}
+
+function MobileHeader({
+  username,
+  searchQuery,
+  onSearchChange,
+  onMenuOpen,
+}: {
+  username: string | null;
+  searchQuery: string;
+  onSearchChange: (v: string) => void;
+  onMenuOpen: () => void;
+}) {
+  return (
+    <header
+      className="sticky top-0 z-20 flex items-center gap-3 px-3 sm:px-6 py-0 h-14 border-b border-white/10"
+      style={{ background: "oklch(0.22 0.07 250)" }}
+    >
+      <button
+        type="button"
+        className="lg:hidden text-white/60 hover:text-white transition-colors p-1"
+        onClick={onMenuOpen}
+        aria-label="Open menu"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+      <div className="flex-1" />
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
+        <Input
+          placeholder="Search..."
+          className="pl-9 w-36 sm:w-52 text-sm h-8 bg-white/10 border-white/15 text-white placeholder:text-white/35 focus:bg-white/15 focus:border-white/30"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <div
+          className="h-8 w-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+          style={{ background: "oklch(0.55 0.18 250)" }}
+        >
+          {username?.charAt(0).toUpperCase()}
+        </div>
+      </div>
+    </header>
   );
 }

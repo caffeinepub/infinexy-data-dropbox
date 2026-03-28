@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Download, FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Document } from "../backend";
 
@@ -19,23 +19,19 @@ export default function DocumentViewerModal({
   onClose,
 }: DocumentViewerModalProps) {
   const [viewUrl, setViewUrl] = useState<string | null>(null);
-  const [directUrl, setDirectUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Revoke previous object URL to free memory
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
     }
     setViewUrl(null);
-    setDirectUrl(null);
 
     if (!doc?.blob) return;
 
     const url = doc.blob.getDirectURL();
-    setDirectUrl(url);
 
     const isImage = doc.mimeType.startsWith("image/");
     const isPdf = doc.mimeType === "application/pdf";
@@ -70,15 +66,6 @@ export default function DocumentViewerModal({
   const isImage = doc.mimeType.startsWith("image/");
   const isPdf = doc.mimeType === "application/pdf";
 
-  const handleDownload = () => {
-    const url = directUrl || viewUrl;
-    if (!url) return;
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = doc.fileName;
-    a.click();
-  };
-
   return (
     <Dialog open={!!doc} onOpenChange={(v) => !v && onClose()}>
       <DialogContent
@@ -86,19 +73,7 @@ export default function DocumentViewerModal({
         data-ocid="document_viewer.dialog"
       >
         <DialogHeader>
-          <div className="flex items-center justify-between pr-6">
-            <DialogTitle className="truncate max-w-xl">{doc.title}</DialogTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownload}
-              className="flex-shrink-0 ml-4"
-              data-ocid="document_viewer.download.button"
-            >
-              <Download className="h-4 w-4 mr-1.5" />
-              Download
-            </Button>
-          </div>
+          <DialogTitle className="truncate max-w-xl">{doc.title}</DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden min-h-0 rounded-lg bg-muted">
@@ -136,11 +111,11 @@ export default function DocumentViewerModal({
                 </p>
               </div>
               <Button
-                onClick={handleDownload}
-                data-ocid="document_viewer.download2.button"
+                variant="outline"
+                disabled
+                data-ocid="document_viewer.no_preview"
               >
-                <Download className="h-4 w-4 mr-1.5" />
-                Download to View
+                No preview available
               </Button>
             </div>
           )}
